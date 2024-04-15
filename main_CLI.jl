@@ -153,6 +153,10 @@ function main(
     # # modify or add constraints
     # @constraint(edmodel, 0.0 <= edmodel[:P][1,1] <= 0.0)
 
+    # TODO: Move these:
+    ESMC = 10.0
+    BAWindow = 1
+
     # Solve
     timesolve = @elapsed begin
         UCcost, EDcost = STESTS.solving(
@@ -166,13 +170,15 @@ function main(
             ucmodel,
             ucpmodel,
             edmodel,
-            storagebidmodels,
             output_folder,
             PriceCap,
+            storagebidmodels,
             ESSeg = ESSeg,
+            ESMC = ESMC,
             UCHorizon = UCHorizon,
             EDHorizon = EDHorizon,
             EDSteps = EDSteps,
+            BAWindow = BAWindow,
             VOLL = VOLL,
             RM = RM,
             FuelAdjustment = FuelAdjustment,

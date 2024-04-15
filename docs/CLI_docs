@@ -1,0 +1,22 @@
+# CLI arguments:
+# 0 - If no command line arguments, default settings are run
+# 1 - "strategic" if strategic bidding, "nonstrategic"  if non-strategic bidding
+# 2 - ratio of strategic ES bidding (Float)
+# 3 - Unit Commitment Horizon (Int)
+# 4 - Economic Dispatch Horizon (Int)
+# 5 - Number of simulation days (Int)
+# 6 - Economic dispatch steps (Int)
+# 7 - Energy Storage Segments (Int)
+# 8 - Fuel Adjustment Proportion (Float)
+# 9 - Error Adjustment (Float)
+# 10 - Load Adjustment (Float)
+# 11 - Path to data ("." if in directory)
+
+# Example usage:
+julia main_CLI.jl strategic 0.5 25 1 2 12 1 1.2 0.25 1.0 /insomnia001/depts/xulab/projects/STESTS/test/03082024
+
+# Default usage:
+julia main_CLI.jl
+
+# TODO: Might add a verbose argument to allow for easily readable output files
+# TODO: Add documentation on running runs in parallel in a single script
