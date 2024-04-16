@@ -4,7 +4,7 @@
 1. [Program Structue](#program-structure)
 2. [Function Definitions](#function-defitions)
     1. [getLastOneIndex()](#getlastoneindex)
-    2. [enforece_strictlu_decreasing_vector](#enforce_strictlu_decreasing_vector=)
+    2. [enforce_strictly_decreasing_vector](#enforce_strictly_decreasing_vector)
     2. [solvingError()](#solvingerror)
     3. [setUCConstraints()](#setuccostraints)
     4. [writeUCtoCSV()](#writeuctocsv)
@@ -45,7 +45,7 @@ Lines with * indicate a function call. ** calls are from <code>bidding.jl</code>
     * <code>vector</code>: Vector of indices to pull from if one does not exist in matrix row.
     * <code>vector2</code>: Vector of indices to pull from if one exists in matrix row.
 
-### enforece_strictlu_decreasing_vector()
+### enforce_strictly_decreasing_vector()
 * Function:
     * Enforces vector to be strictly decreasing.
 * Input Parameters:
@@ -73,15 +73,14 @@ Lines with * indicate a function call. ** calls are from <code>bidding.jl</code>
     * <code>WAvailInput</code>: Available wind input over the day for geneation
     * <code>SAvailInput</code>: Available solar input over the day for generation
     * <code>DADBids</code>: Historical day-ahead discharge bids for energy storage
-    * <code>DADBidsInput</code>: Day-ahead discharge bids for energy storage
-    * <code>DACBidsInput</code>: Day-ahead charging bids for energy storage
+    * <code>DAdb</code>: Day-ahead discharge bids for energy storage
+    * <code>DAcb</code>: Day-ahead charging bids for energy storage
     * <code>UCHorizon</code>: Optimization horizon for UC model (number of hours)
     * <code>RM</code>: Reserve margin as a proportino of hoursly day-ahead lead prediction
 
 ### writeUCtoCSV()
 * Function:
     *  Writes unit commitment results to CSV by appending to an external CSV file
-    * TODO: Look at changing this to a single open/save at the end?
 * Input Parameters:
     * <code>params</code>: Various model and solving parameters
     * <code>output_folder</code>: Output folder path to write UC results
@@ -108,27 +107,28 @@ Lines with * indicate a function call. ** calls are from <code>bidding.jl</code>
     * Sets economic dispatch constraints given unit commitment results, day ahead prices, and energy storage agents
 * Input Parameters:
     * <code>params</code>: Various model and solving parameters
+    * <code>output_folder</code>: Output folder path to write ED constraints
     * <code>edmodel</code>: Economic dispatch to model at a timestep
     * <code>EDV</code>: Generator start-up status for economic dispatch optimization
     * <code>EDW</code>: Generator shut-down status for economic dispatch optimization
     * <code>EDU</code>: Generator up/down status for economic dispatch optimization
     * <code>U</code>: List of gneerator up/down status for all generators
-    * <code>EDGPIni</code>:
+    * <code>EDGPIni</code>: Initial generation by thermal generators in economic dispatch time period
     * <code>EDSteps</code>: Number of steps used in economic dispatch solving per hour
+    * <code>BAWindow</code>: Bid ahead window used in energy storage bids
     * <code>strategic</code>: Boolean representing if energy storage agents should bid strategically or not
     * <code>bidmodels</code>: List of bid models strategic energy storage agents can use
-    * <code>db</code>:
-    * <code>cb</code>: 
-    * <code>EDDBidInput</code>: Economic dispatch discharge bid input for energy storage
-    * <code>EDCBidInput</code>: Economic dispatch charge bid input for energy storage
-    * <code>segment_length</code>: TODO: This.
+    * <code>db</code>: Economic dispatch discharge bid input for energy storage
+    * <code>cb</code>: Economic dispatch charge bid input for energy storage
+    * <code>vrt</code>: Value function calculated for energy storage agents
+    * <code>segment_length</code>: Length of energy storage segments
     * <code>ESSeg</code>: Number of segments used in the energy storage agents
     * <code>RTDBids</code>: Real-time discharge bid for energy storage
     * <code>RTCBids</code>: Real-time charge bid for energy storage
     * <code>AdjustedEDL</code>: Adjusted economic dispatch load for constraints
     * <code>AdjustedEDSolar</code>: Adjusted economic dispatch solar generation available
     * <code>AdjustedEDWind</code>: Adjusted economic dispatch wind generation available
-    * <code>all_UCprices_df</code>: Dataframe containing all unit commitment prices to append results to # TODO: Why is this and the next variable in this section? Check.
+    * <code>all_UCprices_df</code>: Dataframe containing all unit commitment prices to append results to 
     * <code>all_EDprices_df</code>: Dataframe containing all economic dispatch prices to append results to
     * <code>EDHorizon</code>: Economic dispatch time horizon to look over
     * <code>d</code>: Day of ED step
@@ -149,9 +149,12 @@ Lines with * indicate a function call. ** calls are from <code>bidding.jl</code>
     * <code>EDU</code>: Economic dispatch up/down status for generators
     * <code>EDV</code>: Economic dispatch start-up status for generators
     * <code>EDW</code>: Economic dispatch shut-down status for generators
+    * <code>cb</code>:
+    * <code>db</code>:
     * <code>all_EDprices_df</code>: Dataframe containing all economic dispatch prices to append results to
-    * <code>storagezone</code>: TODO: What is this?
+    * <code>storagezone</code>: Price zone used for energy storage
     * <code>PriceCap</code>: Price cap used to prevent high price in loss of load events
+    * <code>FuelAdjustment</code>:
     * <code>EDGSMC</code>: Thermal generator segment marginal cost over EDHorizon time segments
     * <code>EDGMCcost</code>: Cost of thermal generators
     * <code>EDVOLL</code>: Economic dispatch value of loss load
@@ -162,9 +165,9 @@ Lines with * indicate a function call. ** calls are from <code>bidding.jl</code>
     * <code>h</code>: Hour within the day of ED step
     * <code>t</code>: Timestep within the hour within the day of ED step
 * Returns:
-    * <code>EDGPIni</code>: 
-    * <code>EDSOCini</code>:
-    * <code>all_EDprices_df</code>:
+    * <code>EDGPIni</code>: Initial generation by thermal generators in economic dispatch time period
+    * <code>EDSOCini</code>: Economic dispatch state-of-charge for the start of the next time period
+    * <code>all_EDprices_df</code>: Dataframe containing all economic dispatch prices through the entire simulation
 
 
 ### solving()
@@ -181,14 +184,17 @@ Lines with * indicate a function call. ** calls are from <code>bidding.jl</code>
     * <code>ucmodel</code>: Unit commitment model to optimize daily
     * <code>ucpmodel</code>: Unit commitment price model to optimize daily for day-ahead price projections
     * <code>edmodel</code>: Economic dispatch model to optimize every 5-minutes
-    * <code>bidmodels</code>: Energy storage bidding models for strategic bidding
     * <code>output_folder</code>: Output folder path for UC and ED results
     * <code>PriceCap</code>: Real-time price cap to prevent high prices in loss of load event
+    * <code>bidmodels</code>: Energy storage bidding models for strategic bidding
     * <code>ESSeg</code>: Number of discretized bid segments for energy storage
+    * <code>ESMC</code>: Energy storage marginal cost
     * <code>UCHorizon</code>: Optimization horizon for UC model (1 hour segments)
     * <code>EDHorizon</code>: Optimization horizon for ED model (5 minute segments)
     * <code>EDSteps</code>: Number of intervals in an hour
+    * <code>BAWindow</code>: Bid ahead window used in energy storage bids
     * <code>VOLL</code>: Value of Loss Load
-    * <code>RM</code>: Reserve margin as a proportion of day-ahead load predictino
+    * <code>RM</code>: Reserve margin as a proportion of day-ahead load prediction
+    * <code>FuelAdjustment</code>: Parameter for fuel cost adjustment
     * <code>ErrorAdjustment</code>: Parameter for day-ahead forecast error normalization
     * <code>LoadAdjustment</code>: Parameter for day-ahead and real-time load normalization
